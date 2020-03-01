@@ -59,6 +59,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>__WIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -72,6 +73,7 @@
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PreprocessorDefinitions>__WIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -80,17 +82,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="loginDlg.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainWnd.cpp" />
+    <ClCompile Include="settingDlg.cpp" />
+    <ClCompile Include="XGetopt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainWnd.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="settingDlg.ui" />
+    <QtUic Include="loginDialog.ui" />
     <QtUic Include="mainWnd.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="mainWnd.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="loginDlg.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="logger.h" />
+    <ClInclude Include="settingDlg.h" />
+    <ClInclude Include="x64\Debug\uic\ui_loginDialog.h" />
+    <ClInclude Include="x64\Debug\uic\ui_mainWnd.h" />
+    <ClInclude Include="x64\Debug\uic\ui_settingDlg.h" />
+    <ClInclude Include="XGetopt.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

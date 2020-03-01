@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="mainWnd">
+    <qresource prefix="/mainWnd">
+        <file>Resources/gear.png</file>
     </qresource>
 </RCC>
