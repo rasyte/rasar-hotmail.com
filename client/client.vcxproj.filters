@@ -46,12 +46,18 @@
     <ClCompile Include="XGetopt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gameWorker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainWnd.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="loginDlg.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="gameWorker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

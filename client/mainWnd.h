@@ -1,15 +1,25 @@
 #pragma once
 
-#include <QtWidgets/QMainWindow>
-#include "ui_mainWnd.h"
+#include <QMainWindow>
+
+class QTextEdit;
+class QLabel;
 
 class mainWnd : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    mainWnd(QWidget *parent = Q_NULLPTR);
+    mainWnd(QString, QString, QWidget *parent = Q_NULLPTR);
+
 
 private:
-    Ui::mainWndClass ui;
+    void setupUI();
+    void createActions();
+    void createMenus();
+    void createWorker();
+
+    QTextEdit* m_txtState;   
+    QLabel*    m_map;
+
 };

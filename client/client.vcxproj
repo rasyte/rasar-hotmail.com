@@ -82,6 +82,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gameWorker.cpp" />
     <ClCompile Include="logger.cpp" />
     <ClCompile Include="loginDlg.cpp" />
     <ClCompile Include="main.cpp" />
@@ -104,6 +105,7 @@
     <QtMoc Include="loginDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="gameWorker.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="settingDlg.h" />
     <ClInclude Include="x64\Debug\uic\ui_loginDialog.h" />
