@@ -17,12 +17,12 @@ const char* lpszRooms[] = {"Hall", "Lounge", "Dining Room", "Kitchen", "Ball Roo
 const char* lpszWeapons[] = {"Knife", "Candlestick", "Revolver", "Rope", "Lead Pipe", "Wrench"};
 
 
-mainWnd::mainWnd(QString qstrUid, QString qstrPwd, QWidget *parent) : QMainWindow(parent)
+mainWnd::mainWnd(QString qstrUid, QString qstrPwd, char* serverIP, short sPort, QWidget *parent) : QMainWindow(parent)
 {
     setupUI();
     createActions();
     createMenus();
-    createWorker();
+    createWorker(serverIP,sPort);
 
 
     // TODO : check to see if we can chat to server...
@@ -213,14 +213,16 @@ void mainWnd::createMenus()
 
 }
 
-void mainWnd::createWorker() 
+void mainWnd::createWorker(char* sIP, short sPort) 
 {
     QThread* pThread = new QThread;                 // build communication thread....
-    gameWorker* pWorker = new gameWorker();
+    gameWorker* pWorker = new gameWorker(sIP, sPort);
     pWorker->moveToThread(pThread);
 
     // set up signal/slot connections 
     connect(pWorker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
+    connect(pWorker, SIGNAL(serverShutdown(QString)), this, SLOT(shutdown(QString)));
+    connect(pWorker, SIGNAL(hrtBeat(QString)), this, SLOT(heartbeat(QString)));
     connect(pWorker, SIGNAL(finished()), pWorker, SLOT(deleteLater()));
     connect(pWorker, SIGNAL(finished()), pThread, SLOT(quit()));
     connect(pThread, SIGNAL(started()), pWorker, SLOT(process()));
@@ -237,4 +239,16 @@ void mainWnd::createWorker()
 void mainWnd::errorString(QString msg)
 {
     QMessageBox::critical(this, "Error", msg);
+}
+
+void mainWnd::shutdown(QString msg)
+{
+    QString strHtml= QString("<font color=\"red\">%1</font>").arg(msg);
+    m_txtState->insertHtml(strHtml);
+
+}
+
+void mainWnd::heartBeat(QString msg)
+{
+
 }

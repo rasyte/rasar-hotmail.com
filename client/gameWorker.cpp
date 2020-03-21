@@ -1,3 +1,4 @@
+#include "../common/common.h"
 #include "gameWorker.h"
 #include "logger.h"
 #include <winsock2.h>
@@ -10,16 +11,23 @@ const int HDR_LEN = 3;                         // out message header length
 
 extern int networkError();
 
-gameWorker::gameWorker()
+gameWorker::gameWorker(char* serverIP, short sPort): m_sIP(nullptr), m_sPort(-1)
 {
     CLogger::getInstance()->LogMessage("gameWorker constructor");
     
-
+    if (serverIP != nullptr)
+    {
+        m_sIP = new char[strlen(serverIP) + 1];
+        memset((void*)m_sIP, '/0', strlen(serverIP) + 1);
+        strcpy(m_sIP, serverIP);
+    }
+    if(sPort > 0) m_sPort = sPort;
 }
 
 gameWorker::~gameWorker()
 {
     CLogger::getInstance()-> LogMessage("gameWorker destructor");
+    if (m_sIP != nullptr) delete[] m_sIP;
 }
 
 void gameWorker::process()
@@ -58,7 +66,8 @@ void gameWorker::process()
                     char  hdr[HDR_LEN];
 
                     recv(m_soc, &hdr[0], HDR_LEN, 0);                // read in header...
-                    short msgLen = ntohs((hdr[0] << 8) | hdr[1]);    // get message length from header
+                    //short msgLen = ntohs((hdr[0] << 8) | hdr[1]);    // get message length from header
+                    short msgLen = hdr[0];                           // get message length
                     unsigned char cmd = hdr[2];                      // get command from header
                     try
                     {
@@ -83,7 +92,7 @@ void gameWorker::process()
                                 {
                                     break;
                                 }
-                                case CMD_ACCUSE:                                // got an accquision from server
+                                case CMD_ACCUSE:                                // got an accusation from server
                                 {
                                     break;
                                 }
@@ -91,8 +100,14 @@ void gameWorker::process()
                                 {
                                     break;
                                 }
-                                case CMD_PLAYER_JOIN:
+                                case CMD_PLAYER_JOIN:                           // player joined the game
                                 {
+                                    break;
+                                }
+                                case CMD_SHUTDOWN:
+                                {
+                                    emit serverShutdown(QString(buf));
+                                    m_bRun = false;
                                     break;
                                 }
                                 default:
@@ -137,18 +152,35 @@ void gameWorker::process()
 bool gameWorker::connectServer()
 {
     bool    bRet = false;
+    QString qstrServer;
+    short   sPort;
     CLogger::getInstance()->LogMessage("attempting to connect to server");
 
     if (-1 != (m_soc = socket(AF_INET, SOCK_STREAM, 0)))
     {
         // get server address/port from settings .... see note in main about dynamically updateing settings.
         QSettings  setting("JHUProj", "clue-less");
-        QString m_qstrServer = setting.value("server", "").toString();
-        short sPort = setting.value("port", "").toString().toShort();
+        if (m_sIP == nullptr)
+        {
+            qstrServer = setting.value("server", "").toString();
+        }
+        else
+        {
+            qstrServer = QString(m_sIP);
+        }
+
+        if (m_sPort = -1)
+        {
+            sPort = setting.value("port", "").toString().toShort();
+        }
+        else
+        {
+            sPort = m_sPort;
+        }
 
         struct sockaddr_in  serverAddr;
         serverAddr.sin_family = AF_INET;
-        serverAddr.sin_addr.s_addr = inet_addr(m_qstrServer.toStdString().c_str());
+        serverAddr.sin_addr.s_addr = inet_addr(qstrServer.toStdString().c_str());
         serverAddr.sin_port = htons(sPort);
 
         if (-1 != ::connect(m_soc, (const sockaddr*)&serverAddr, sizeof(serverAddr)))

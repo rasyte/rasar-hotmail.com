@@ -26,6 +26,9 @@
     <Filter Include="Generated Files">
       <UniqueIdentifier>{f2f8a70b-aa37-48c9-9a1e-7855a25e0650}</UniqueIdentifier>
     </Filter>
+    <Filter Include="common">
+      <UniqueIdentifier>{8ee43b79-b84c-4646-90b2-bc8389723f82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -95,6 +98,9 @@
     </ClInclude>
     <ClInclude Include="XGetopt.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\common\common.h">
+      <Filter>common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
