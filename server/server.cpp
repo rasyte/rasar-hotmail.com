@@ -8,16 +8,31 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+
 #pragma comment(lib, "ws2_32.lib")
+#pragma pack(show)
+typedef struct _tag_hdr
+{
+    short      msgLen;
+    char       chCode;
+    char       szMsg[128];              // more than we really need
+} msgT, *pMsgT;
 
-
-#else
+#else           
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+
+typedef struct _tag_hdr
+{
+    short      msgLen;
+    char       chCode;
+    char       szMsg[128];              // more than we really need
+} __attribute__((packed)) msgT, *pMsgT;
+
 #endif
 
 
@@ -25,11 +40,11 @@
 #include <stdlib.h>
 #include <iostream>
 #include <queue>
+#include "../common/common.h"
 
 const char defServer[] = {"192.168.1.19"};
 const unsigned short defPort = 1337;
 const char lpszVersion[] = {"0.0.5"};
-
 
 
 bool initWinSock();  // for windows only...need to initialize the socket subsytems
@@ -166,6 +181,16 @@ int main()
 
                                   g_conns.push_back(connInfo);
 
+                                  // send a connected message here....
+                                  const char* str = "Connected to server ";
+                                  msgT   msg;
+                                  memset((void*)msg.szMsg, '\0', 128);
+                                  int cntCh = sprintf(msg.szMsg, "connect to server %s", inet_ntoa(servAddr.sin_addr));
+                                  msg.msgLen = (short)(4 + cntCh);           // header length + null terminator...
+                                  msg.chCode = CMD_HEARTBEAT;
+                                  
+                                  send(connfd, (char*)&msg, msg.msgLen, 0);
+
                               }
                               else
                               {
@@ -178,8 +203,9 @@ int main()
                               std::cerr << "unexpected file descriptor signaled?" << std::endl;
                           }
                       }
-                      else
+                      else                     // send a heartbeat on each timeout...
                       {
+
                           std::cerr << "timeout has occured" << std::endl;
                       }
                   }   // end of while block
@@ -190,12 +216,14 @@ int main()
                   {   
                       while (g_conns.end() != iter)
                       {
-                          char msg[25];
-                          msg[0] = 0x00;
-                          msg[1] = 0x19;
-                          msg[2] = 0x06;
-                          strcpy(&msg[3], "Server is shutting down");
-                          send((*iter)->connfd, msg, 25, 0);
+                          const char* str = "Server is shutting down";
+                          msgT   msg;
+                          msg.msgLen = (short)(4 + strlen(str));           // header length + null terminator...
+                          msg.chCode = CMD_SHUTDOWN;
+                          memset((void*)msg.szMsg, '\0', 50);            
+                          strcpy(msg.szMsg, str);           
+
+                          send((*iter)->connfd, (char*)&msg, msg.msgLen, 0);
                           closesocket((*iter)->connfd);
                           (*iter)->connfd = -1;
                           ++iter;
