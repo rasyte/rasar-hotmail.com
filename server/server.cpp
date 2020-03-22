@@ -242,7 +242,11 @@ int main()
                           strcpy(msg.szMsg, str);           
 
                           send((*iter)->connfd, (char*)&msg, msg.msgLen, 0);
+#ifdef __WIN
                           closesocket((*iter)->connfd);
+#else
+			  close((*iter)->connfd);
+#endif
                           (*iter)->connfd = -1;
                           ++iter;
                       }
