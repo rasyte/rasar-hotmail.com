@@ -40,7 +40,9 @@ typedef struct _tag_hdr
 #include <stdlib.h>
 #include <iostream>
 #include <queue>
+#include <thread>
 #include "../common/common.h"
+#include "manager.h" 
 
 const char defServer[] = {"192.168.1.19"};
 const unsigned short defPort = 1337;
@@ -52,13 +54,16 @@ int getLastError(); // windows -- wrapper around WSAGetLastError; linux - just r
 void showUsage();
 void showVersion();
 
-typedef struct _connInfo
-{
-  int                   connfd;
-  struct   sockaddr_in  cliAddr;
-} connInfoT, *pconnInfoT;
+
+//typedef struct _connInfo
+//{
+//  int                   connfd;
+//  struct   sockaddr_in  cliAddr;
+//} connInfoT, *pconnInfoT;
 
 std::vector<pconnInfoT>  g_conns;              // global queue of connections
+bool                     g_bForce;             // condition variable to force a game to start
+bool                     g_bMgrRun;            // condition variable to control manager thread
 
 
 int main()
@@ -69,6 +74,11 @@ int main()
   int                 nRet;
 
   // TODO: process command line arguments...only use defalut if necessary
+
+  // launch our manager thread...
+  g_bForce = false;
+  g_bMgrRun = true;
+  std::thread manager(manage);                       // manage is the name of the tread function
 
   if (initWinSock())
   {
@@ -82,6 +92,14 @@ int main()
 
           std::cout << "Welcome to the Clue-less server." << std::endl;
           showUsage();
+
+          // build our heatbeat message, will reuse this often...
+          msgT   hbMsg;
+          memset((void*)hbMsg.szMsg, '\0', 128);
+          int cntCh = sprintf(hbMsg.szMsg, "connect to server %s", "192.168.1.19");
+          hbMsg.msgLen = (short)(4 + cntCh);           // header length + null terminator...
+          hbMsg.chCode = CMD_HRT_BEAT;
+
 
           if (0 == (nRet = bind(sockfd, (struct sockaddr*)&servAddr, sizeof(servAddr))))
           {
@@ -128,7 +146,7 @@ int main()
                                       int cnt = 1;
                                       while (g_conns.end() != iter)
                                       {
-                                          std::cout << "connection: (" << cnt++ << ") IP address " << inet_ntoa((*iter)->cliAddr.sin_addr) << std::endl;
+                                          std::cout << "connection: (" << cnt++ << ") IP address " << defServer << std::endl;
                                           ++iter;
                                       }
                                   }
@@ -143,7 +161,7 @@ int main()
 
                               case 'f':
                               {
-                                  std::cout << "NYI" << std::endl;
+                                  g_bForce = true;
                               }
                               break;
 
@@ -162,6 +180,7 @@ int main()
                               case 'q':
                               {
                                   bRun = false;
+                                  g_bMgrRun = false;
                               }
                               break;
 
@@ -171,7 +190,7 @@ int main()
                           } // end of stdin FD_ISSET
                           else if (FD_ISSET(sockfd, &rdfs))    // data on listening sockect
                           {
-                              if (0 < (connfd = accept(sockfd, (struct sockaddr*)&cliAddr, reinterpret_cast<int*>(&len))))
+                              if (0 < (connfd = accept(sockfd, (struct sockaddr*)&cliAddr, reinterpret_cast<socklen_t*>(&len))))
                               {
                                   pconnInfoT connInfo = new connInfoT;
                                   connInfo->connfd = connfd;
@@ -182,15 +201,7 @@ int main()
                                   g_conns.push_back(connInfo);
 
                                   // send a connected message here....
-                                  const char* str = "Connected to server ";
-                                  msgT   msg;
-                                  memset((void*)msg.szMsg, '\0', 128);
-                                  int cntCh = sprintf(msg.szMsg, "connect to server %s", inet_ntoa(servAddr.sin_addr));
-                                  msg.msgLen = (short)(4 + cntCh);           // header length + null terminator...
-                                  msg.chCode = CMD_HEARTBEAT;
-                                  
-                                  send(connfd, (char*)&msg, msg.msgLen, 0);
-
+                                  send(connfd, (char*)&hbMsg, hbMsg.msgLen, 0);
                               }
                               else
                               {
@@ -205,8 +216,15 @@ int main()
                       }
                       else                     // send a heartbeat on each timeout...
                       {
-
-                          std::cerr << "timeout has occured" << std::endl;
+                          std::vector<pconnInfoT>::iterator iter = g_conns.begin();
+                          if (g_conns.size() > 0)
+                          {
+                              while (g_conns.end() != iter)
+                              {
+                                  send((*iter)->connfd, (char*)&hbMsg, hbMsg.msgLen, 0);
+                                  ++iter;
+                              }
+                          }
                       }
                   }   // end of while block
 
@@ -259,9 +277,9 @@ int main()
 void showUsage()
 {
   std::cout << "Commands accepted:" << std::endl;
-  std::cout << "l    list clients connected to the server (NYI)" << std::endl;
+  std::cout << "l    list clients connected to the server " << std::endl;
   std::cout << "g    list games currently running on server (NYI)" << std::endl;
-  std::cout << "f    force a game to start, even with less than 3 players (NYI)" << std::endl;
+  std::cout << "f    force a game to start, even with less than 3 players " << std::endl;
   std::cout << "v    shows version information" << std::endl;
   std::cout << "h    shows this screen " << std::endl;
   std::cout << "q    close all sockets and exit" << std::endl;
