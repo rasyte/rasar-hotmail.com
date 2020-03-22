@@ -30,6 +30,7 @@ void manage()
     // TODO: when we break (~1 sec) check condition variable bForce
     // TODO: use a mutex to control access to queue
     // TODO: when we break (~1 sec) check queue size
+    }
 
 
 }
