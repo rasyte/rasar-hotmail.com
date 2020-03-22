@@ -24,7 +24,8 @@ private:
     void createMenus();
     void createWorker(char*, short);
 
-    QTextEdit* m_txtState;   
-    QLabel*    m_map;
+    QTextEdit*       m_txtState;   
+    QLabel*          m_map;
+    QVector<QLabel*> m_qvecCards;
 
 };

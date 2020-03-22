@@ -108,7 +108,7 @@
     <QtMoc Include="gameWorker.h" />
     <ClInclude Include="..\common\common.h" />
     <ClInclude Include="logger.h" />
-    <ClInclude Include="settingDlg.h" />
+    <QtMoc Include="settingDlg.h" />
     <ClInclude Include="x64\Debug\uic\ui_loginDialog.h" />
     <ClInclude Include="x64\Debug\uic\ui_mainWnd.h" />
     <ClInclude Include="x64\Debug\uic\ui_settingDlg.h" />

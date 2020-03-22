@@ -6,10 +6,10 @@
 #include <QApplication>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QStatusBar>
 
 #include "mainWnd.h"
 #include "gameWorker.h"
-
 
 
 const char* lpszSuspects[] = { "Col. Mustard","Prof. Plum","Mr. Green","Mrs. Peacock","Miss Scarlet", "Mrs. White" };
@@ -57,10 +57,11 @@ void mainWnd::setupUI()
     QVector<QLabel*> qvecSuspects;
     QVector<QLabel*> qvecRooms;
     QVector<QLabel*> qvecWeapons;
+    QVector<QLabel*> m_qvecCards;
 
     if (this->objectName().isEmpty())
         this->setObjectName(QString::fromUtf8("mainWndClass"));
-    resize(887, 919);
+    resize(1200, 919);//resize(887, 919);
     setWindowTitle("clue-less");
 
     // set up fonts that we will use
@@ -196,7 +197,32 @@ void mainWnd::setupUI()
     m_map->setPixmap(QPixmap(QString::fromUtf8("Resources/board.png")));
     m_map->setStyleSheet("border: 1px solid black");
 
-    //menuBar->addAction(menuGame->menuAction());
+    // setup card locations
+    int cnt = 1;
+    for (int row = 30; row < 501; row += 235)
+    {
+        for (int col = 900; col < 1064; col += 163)
+        {
+            QLabel* pTemp = new QLabel(centralWidget);
+            pTemp->setObjectName(QString("card%1").arg(cnt));
+            pTemp->setGeometry(QRect(col, row, 133, 205));
+            pTemp->setPixmap(QPixmap(QString("Resources/card%1").arg(3*cnt + 2)));
+
+            m_qvecCards.push_back(pTemp);
+            ++cnt;
+        }
+    }
+ 
+    // setup StatusBar
+    QStatusBar* statusbar = new QStatusBar(this);
+    statusbar->setObjectName(QStringLiteral("statusbar"));
+    this->setStatusBar(statusbar);
+
+    // setup menu
+    //menubar = new QMenuBar(this);
+    //menubar->setObjectName(QStringLiteral("menubar"));
+    //menubar->setGeometry(QRect(0, 0, WIN_WIDTH, 21));
+    //this->setMenuBar(menubar);
 
     QMetaObject::connectSlotsByName(this);
 } 
@@ -205,12 +231,17 @@ void mainWnd::setupUI()
 
 void mainWnd::createActions() 
 {
-
+    //m_fileOpen = new QAction("&Open", this);
+    //m_fileOpen->setShortcuts(QKeySequence::Open);
+    //m_fileOpen->setStatusTip("opens existing configuration file");
+    //connect(m_fileOpen, &QAction::triggered, this, &LanGen::onFileOpen);
 }
 
 void mainWnd::createMenus() 
 {
-
+    //m_fileMenu = menuBar()->addMenu("&File");
+    //m_fileMenu->addAction(m_fileNew);
+    //m_fileMenu->addAction(m_fileOpen)
 }
 
 void mainWnd::createWorker(char* sIP, short sPort) 
@@ -222,7 +253,7 @@ void mainWnd::createWorker(char* sIP, short sPort)
     // set up signal/slot connections 
     connect(pWorker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
     connect(pWorker, SIGNAL(serverShutdown(QString)), this, SLOT(shutdown(QString)));
-    connect(pWorker, SIGNAL(hrtBeat(QString)), this, SLOT(heartbeat(QString)));
+    connect(pWorker, SIGNAL(hrtBeat(QString)), this, SLOT(heartBeat(QString)));
     connect(pWorker, SIGNAL(finished()), pWorker, SLOT(deleteLater()));
     connect(pWorker, SIGNAL(finished()), pThread, SLOT(quit()));
     connect(pThread, SIGNAL(started()), pWorker, SLOT(process()));
@@ -250,5 +281,7 @@ void mainWnd::shutdown(QString msg)
 
 void mainWnd::heartBeat(QString msg)
 {
-
+    QString strHtml = QString(msg);
+    m_txtState->insertHtml(strHtml);
+    statusBar()->showMessage(msg);
 }

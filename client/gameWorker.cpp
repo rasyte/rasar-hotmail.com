@@ -1,8 +1,18 @@
 #include "../common/common.h"
 #include "gameWorker.h"
 #include "logger.h"
-#include <winsock2.h>
-#include <ws2tcpip.h>
+
+#ifdef __WIN
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+#else
+  #include <sys/types.h>
+  #include <sys/socket.h>
+  #include <arpa/inet.h>
+
+  #include <unistd.h>
+#endif
+
 #include <time.h>
 
 #include <QSettings>
@@ -66,7 +76,6 @@ void gameWorker::process()
                     char  hdr[HDR_LEN];
 
                     recv(m_soc, &hdr[0], HDR_LEN, 0);                // read in header...
-                    //short msgLen = ntohs((hdr[0] << 8) | hdr[1]);    // get message length from header
                     short msgLen = hdr[0];                           // get message length
                     unsigned char cmd = hdr[2];                      // get command from header
                     try
@@ -76,7 +85,6 @@ void gameWorker::process()
                             char* buf = new char[msgLen - 3];
                             recv(m_soc, buf, msgLen - 3, 0);
                         
-
                             switch (cmd)
                             {
                                 case  CMD_HRT_BEAT:                             // got a heart-beat from server
@@ -111,25 +119,25 @@ void gameWorker::process()
                                     break;
                                 }
                                 default:
-                                    CLogger::getInstance()->LogMessage("Unknown message, command %d\n", cmd);
+                                    CLogger::getInstance()->LogMessage(" Worker: Unknown message, command %d\n", cmd);
                             }
                             delete[] buf;
                         }
                     }
                     catch (std::bad_alloc)
                     {
-                        CLogger::getInstance()->LogMessage("failed to allocate buffer of message contents\n");
+                        CLogger::getInstance()->LogMessage(" Worker: failed to allocate buffer of message contents\n");
                         m_bRun = false;
                     }
                 }
                 else                                   // this should not happen
                 {
-                    CLogger::getInstance()->LogMessage("unexpected file descriptor signaled?");
+                    CLogger::getInstance()->LogMessage(" Worker: unexpected file descriptor signaled?");
                 }
             }
             else
             {
-                CLogger::getInstance()->LogMessage("timeout has occured");
+                CLogger::getInstance()->LogMessage(" Worker: timeout has occured");
                 // we should allow QT to process messages here....
             }
 
@@ -169,7 +177,7 @@ bool gameWorker::connectServer()
             qstrServer = QString(m_sIP);
         }
 
-        if (m_sPort = -1)
+        if (m_sPort == -1)
         {
             sPort = setting.value("port", "").toString().toShort();
         }

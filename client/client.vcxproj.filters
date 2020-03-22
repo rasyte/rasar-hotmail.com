@@ -63,6 +63,9 @@
     <QtMoc Include="gameWorker.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="settingDlg.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="mainWnd.ui">
@@ -89,9 +92,6 @@
     </ClInclude>
     <ClInclude Include="x64\Debug\uic\ui_settingDlg.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="settingDlg.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="logger.h">
       <Filter>Header Files</Filter>

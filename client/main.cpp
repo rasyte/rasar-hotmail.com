@@ -25,6 +25,9 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
+#else
+#include <unistd.h>
+
 #endif
 
 #include "mainWnd.h"
@@ -56,6 +59,8 @@ int main(int argc, char *argv[])
     int   nRet = 0;                                   // return value from main.
     char  c;
     char* logFile = nullptr;
+    char* serverIP = nullptr;
+    short sPort = -1;
     bool  bNoLogin = false;                           
 
     allocConsole();                                   // get a console up and running....
@@ -64,7 +69,7 @@ int main(int argc, char *argv[])
     QSettings  setting("JHUProj", "clue-less");       // getting settings, can be overridden by cmd line
                                                       // found at: HKEY_USERS\<user>\Software\JHUProj\clue-less
     // process command line arguments...
-    while ((c = getopt(argc, argv, "dnl:hv")) != EOF)
+    while ((c = getopt(argc, argv, "dnl:s:p:hv")) != EOF)
     {
         switch (c)
         {
@@ -86,6 +91,14 @@ int main(int argc, char *argv[])
             case 'v':                                 // displaying version and information
                 showVersion(argv[0]);
                 exit(0);
+            case 's':                                 // define server IP address on command line
+                serverIP = new char[strlen(optarg) + 1];
+                memset((void*)serverIP, '\0', strlen(optarg) + 1);
+                strcpy(serverIP, optarg);
+                break;
+            case 'p':
+                sPort = atoi(optarg);
+                break;
             case '?':                                 // unknown switch or error
             default:                                  // fall-through is expected
                 fprintf(stderr, "unexpected flag %c", c);
