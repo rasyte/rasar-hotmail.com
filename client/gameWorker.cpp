@@ -222,7 +222,7 @@ void gameWorker::disconnectServer()
 #else
     if (0 != close(m_soc))
     {
-        CLogger::::getInstance()->LogMessage("failed to close socket, error %d\n", networkError());
+        CLogger::getInstance()->LogMessage("failed to close socket, error %d\n", networkError());
     }
 #endif
 }
