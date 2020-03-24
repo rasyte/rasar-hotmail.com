@@ -41,6 +41,7 @@ typedef struct _tag_hdr
 #include <iostream>
 #include <queue>
 #include <thread>
+#include <mutex>
 #include "../common/common.h"
 #include "manager.h" 
 
@@ -64,6 +65,7 @@ void showVersion();
 std::vector<pconnInfoT>  g_conns;              // global queue of connections
 bool                     g_bForce;             // condition variable to force a game to start
 bool                     g_bMgrRun;            // condition variable to control manager thread
+std::mutex               g_mutexQue;           // mutex to guard access to player queue
 
 
 int main()
@@ -197,8 +199,10 @@ int main()
                                   connInfo->cliAddr.sin_family = AF_INET;
                                   connInfo->cliAddr.sin_addr.s_addr = cliAddr.sin_addr.s_addr;
                                   connInfo->cliAddr.sin_port = cliAddr.sin_port;
-
+                                  
+                                  g_mutexQue.lock();
                                   g_conns.push_back(connInfo);
+                                  g_mutexQue.unlock();
 
                                   // send a connected message here....
                                   send(connfd, (char*)&hbMsg, hbMsg.msgLen, 0);
@@ -245,7 +249,7 @@ int main()
 #ifdef __WIN
                           closesocket((*iter)->connfd);
 #else
-			  close((*iter)->connfd);
+						  close((*iter)->connfd);
 #endif
                           (*iter)->connfd = -1;
                           ++iter;
