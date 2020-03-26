@@ -9,10 +9,11 @@ LKFLAGS=-L $(QT_DIR)/lib -lQt5Core -lQt5Gui -lQt5Widgets
 
 UIC=$(QT_DIR)/bin/uic
 MOC=$(QT_DIR)/bin/moc
+RCC=$(QT_DIR)/bin/rcc
 
 PROJ=clclient
 
-OBJS=gameWorker.o logger.o loginDlg.o main.o mainWnd.o settingDlg.o
+OBJS=gameWorker.o logger.o loginDlg.o main.o mainWnd.o settingDlg.o qrc_mainWnd.o
 MOCS=moc_mainWnd.o moc_loginDlg.o moc_gameWorker.o
 
 
@@ -54,10 +55,15 @@ settingDlg.o : settingDlg.cpp settingDlg.h
 moc_settingDlg.o : settingDlg.h
 	$(MOC) settingDlg.h -o moc_settingDlg.cpp
 	$(CC) -c $(CCFLAGS) $(CCINC) moc_settingDlg.cpp -o moc_settingDlg.o
-
+	
+mainWnd.o : mainWnd.qrc
+	$(RCC) -name mainWnd mainWnd.qrc -o mainWnd.cpp	
+	$(CC) -c $(CCFLAGS) $(CCINC) mainWnd.cpp -o mainWnd.o
+	
 clean :
 	rm -f *.o
 	rm -f moc_*
+	rm -f qrc_*
 	rm -f *.*~
 	rm -f $(PROJ)
 

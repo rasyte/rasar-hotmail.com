@@ -7,14 +7,16 @@
 #include <QTextEdit>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QKeyEvent>
 
 #include "mainWnd.h"
 #include "gameWorker.h"
+#include "GameMenuDlg.h"
+#include "GuessDlg.h"
+#include "../common/common.h"
 
 
-const char* lpszSuspects[] = { "Col. Mustard","Prof. Plum","Mr. Green","Mrs. Peacock","Miss Scarlet", "Mrs. White" };
-const char* lpszRooms[] = {"Hall", "Lounge", "Dining Room", "Kitchen", "Ball Room","Conservatory", "Billard Room", "Library", "Study"};
-const char* lpszWeapons[] = {"Knife", "Candlestick", "Revolver", "Rope", "Lead Pipe", "Wrench"};
+
 
 
 mainWnd::mainWnd(QString qstrUid, QString qstrPwd, char* serverIP, short sPort, QWidget *parent) : QMainWindow(parent)
@@ -23,17 +25,6 @@ mainWnd::mainWnd(QString qstrUid, QString qstrPwd, char* serverIP, short sPort, 
     createActions();
     createMenus();
     createWorker(serverIP,sPort);
-
-
-    // TODO : check to see if we can chat to server...
-    // TODO : pass uid/pwd to server....
-    // TODO : check to see if we've logged in....
-    // TODO : if we failed to log in, clean up and bail
-    //        else show main GUI.
-
-    // TODO : if successfully login in, start comms thread and show main UI
-
-
 }
 
 
@@ -258,10 +249,57 @@ void mainWnd::createWorker(char* sIP, short sPort)
     connect(pWorker, SIGNAL(finished()), pThread, SLOT(quit()));
     connect(pThread, SIGNAL(started()), pWorker, SLOT(process()));
     connect(pThread, SIGNAL(finished()), pThread, SLOT(deleteLater()));
+    connect(this, SIGNAL(sendMsg(QByteArray)), pWorker, SLOT(sendMsg(QByteArray)));
 
 
     pThread->start();                               // start the thread running
+}
 
+void mainWnd::keyPressEvent(QKeyEvent* pevt)
+{
+    if (pevt->key() == Qt::Key_Escape)
+    {   
+        GameMenuDlg   dlg(this);
+        dlg.exec();
+    }
+    else if (pevt->key() == Qt::Key_A)
+    {
+        guessDlg   dlg(this, false);
+        if (QDialog::Accepted == dlg.exec() )
+        {
+            QString qstrGuess = dlg.getGuess(); 
+            msgT  msg;
+            msg.msgLen = HDR_LEN + qstrGuess.length();
+            msg.chCode = CMD_ACCUSE;
+            strcpy(msg.szMsg, qstrGuess.toStdString().c_str());
+            // need to comvert msg to a qbytearray so we can use signals/slots.
+            char* buf = new char[msg.msgLen];
+            memcpy((void*)buf, (void*)&msg, msg.msgLen);
+            QByteArray  qbaMsg = QByteArray::fromRawData(buf, msg.msgLen);
+
+            emit(qbaMsg);                                // TODO : send the message to server.....
+        }
+
+    }
+    else if (pevt->key() == Qt::Key_S)
+    {
+        CLogger::getInstance()->LogMessage("sending a suggestion message....\n");
+        guessDlg   dlg(this, true);
+        if (QDialog::Accepted == dlg.exec())
+        {
+            QString qstrGuess = dlg.getGuess();
+            msgT  msg;
+            msg.msgLen = HDR_LEN + qstrGuess.length();
+            msg.chCode = CMD_SUGGEST;
+            strcpy(msg.szMsg, qstrGuess.toStdString().c_str());
+            // need to comvert msg to a qbytearray so we can use signals/slots.
+            char* buf = new char[msg.msgLen];
+            memcpy((void*)buf, (void*)&msg, msg.msgLen);
+            QByteArray  qbaMsg = QByteArray::fromRawData(buf, msg.msgLen);
+
+            emit(qbaMsg);                                // TODO : send the message to server.....
+        }
+    }
 }
 
 
@@ -269,7 +307,7 @@ void mainWnd::createWorker(char* sIP, short sPort)
 // private slots:
 void mainWnd::errorString(QString msg)
 {
-    QMessageBox::critical(this, "Error", msg);
+    QMessageBox::critical(this, "[mainWnd.cpp] Error", msg);
 }
 
 void mainWnd::shutdown(QString msg)
@@ -282,6 +320,5 @@ void mainWnd::shutdown(QString msg)
 void mainWnd::heartBeat(QString msg)
 {
     QString strHtml = QString(msg);
-    m_txtState->insertHtml(strHtml);
     statusBar()->showMessage(msg);
 }

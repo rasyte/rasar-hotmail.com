@@ -3,11 +3,8 @@
 #include <QObject>
 #include <QString>
 
-//#include <winsock2.h>
-//#include <ws2tcpip.h>
-//#include <time.h>
 
-
+#include "../common/common.h"
 #include "logger.h"
 
 class gameWorker : public QObject
@@ -20,6 +17,7 @@ public:
 
 public slots:
     void process();
+    void sendMsg(QByteArray);
 
 signals:
     void finished();

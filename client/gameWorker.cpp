@@ -17,7 +17,7 @@
 
 #include <QSettings>
 
-const int HDR_LEN = 3;                         // out message header length
+//const int HDR_LEN = 3;                         // out message header length
 
 extern int networkError();
 
@@ -37,6 +37,7 @@ gameWorker::gameWorker(char* serverIP, short sPort): m_sIP(nullptr), m_sPort(-1)
 gameWorker::~gameWorker()
 {
     CLogger::getInstance()-> LogMessage("gameWorker destructor");
+    disconnectServer();
     if (m_sIP != nullptr) delete[] m_sIP;
 }
 
@@ -44,7 +45,6 @@ void gameWorker::process()
 {
     CLogger::getInstance()->LogMessage("worker alive and running");
 
-    
     if (connectServer())
     {
         m_bRun = true;
@@ -53,6 +53,7 @@ void gameWorker::process()
 
         while (m_bRun)
         {
+            CLogger::getInstance()->LogMessage("[gameWorker] -- top of while loop");
             FD_ZERO(&rdfs);
             FD_SET(m_soc, &rdfs);               // monitor our listening socket for input
 
@@ -62,9 +63,9 @@ void gameWorker::process()
             int ret = select(m_soc + 1, &rdfs, nullptr, nullptr, &tv);
             if (-1 == ret)
             {
-                CLogger::getInstance()->LogMessage("select failed");
+                CLogger::getInstance()->LogMessage("select failed error is %d\n",networkError());
                 // TODO : we need to show this in an error dialog...
-                m_bRun = false;                 // QUESTION : is this the correct behavior, close connection?
+                //m_bRun = false;                 // QUESTION : is this the correct behavior, close connection?
             }
             else if (ret > 0)
             {
@@ -140,18 +141,12 @@ void gameWorker::process()
                 CLogger::getInstance()->LogMessage(" Worker: timeout has occured");
                 // we should allow QT to process messages here....
             }
-
         }
-
-        disconnectServer();
-
-
     }
     else
     {
         CLogger::getInstance()->LogMessage("server connect failed, error is %d\n", networkError());
     }
-
 
     emit finished();
 }
@@ -208,6 +203,29 @@ bool gameWorker::connectServer()
     }
 
     return bRet;
+}
+
+
+void gameWorker::sendMsg(QByteArray qbaMsg)
+{
+    CLogger::getInstance()->LogMessage("got a request to send a message\n");
+    // convert back to char* to send out...
+    const char*   msg = qbaMsg.constData();
+    short len;
+    memcpy((void*)msg, (void*)&len, sizeof(short));
+
+    //int nRet = send(m_soc, msg, len, 0);
+
+    //if (nRet == -1)
+    //{
+    //    CLogger::getInstance()->LogMessage("failed to send message, error %d\n", networkError());
+    //}
+    //else if (nRet < len)
+    //{
+        // we've got a partial xmission here...
+    //}
+
+
 }
 
 
