@@ -10,13 +10,13 @@
 
 
 #pragma comment(lib, "ws2_32.lib")
-#pragma pack(show)
-typedef struct _tag_hdr
-{
-    short      msgLen;
-    char       chCode;
-    char       szMsg[128];              // more than we really need
-} msgT, *pMsgT;
+//#pragma pack(show)
+//typedef struct _tag_hdr
+//{
+//    short      msgLen;
+//    char       chCode;
+//    char       szMsg[128];              // more than we really need
+//} msgT, *pMsgT;
 
 #else           
 #include <sys/types.h>
@@ -26,12 +26,12 @@ typedef struct _tag_hdr
 #include <string.h>
 #include <unistd.h>
 
-typedef struct _tag_hdr
-{
-    short      msgLen;
-    char       chCode;
-    char       szMsg[128];              // more than we really need
-} __attribute__((packed)) msgT, *pMsgT;
+//typedef struct _tag_hdr
+//{
+//    short      msgLen;
+//    char       chCode;
+//    char       szMsg[128];              // more than we really need
+//} __attribute__((packed)) msgT, *pMsgT;
 
 #endif
 

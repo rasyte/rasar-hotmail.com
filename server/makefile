@@ -5,7 +5,7 @@ LK=g++
 LIBS=-lpthread
 
 PROG=clserver
-OBJS=server.o manager.o game.o
+OBJS=server.o manager.o game.o logger.o
 
 $(PROG) : $(OBJS)
 	$(LK) $(LKFLAGS) $(OBJS) $(LIBS) -o $(PROG)
@@ -20,6 +20,10 @@ manager.o : manager.h manager.cpp
 
 game.o : game.h game.cpp
 	$(CC) -c $(CCFLAGS) game.cpp -o game.o
+
+logger.o : logger.h logger.cpp
+	$(CC) -c $(CCFLAGS) logger.cpp -o logger.o
+
 
 clean :
 	rm -rf *.o *.*~

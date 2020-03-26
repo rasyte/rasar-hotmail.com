@@ -20,7 +20,7 @@ void game(std::vector<pconnInfoT> vecPlayers)
   }
 
   // TODO : perform initialization
-  int Player = 0;                  // should be the person that choose Miss Scarlet
+  int player = 0;                  // should be the person that choose Miss Scarlet
 
   while(!bWinner)
   {
