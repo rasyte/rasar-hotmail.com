@@ -56,16 +56,10 @@ void showUsage();
 void showVersion();
 
 
-//typedef struct _connInfo
-//{
-//  int                   connfd;
-//  struct   sockaddr_in  cliAddr;
-//} connInfoT, *pconnInfoT;
-
 std::vector<pconnInfoT>  g_conns;              // global queue of connections
 bool                     g_bForce;             // condition variable to force a game to start
 bool                     g_bMgrRun;            // condition variable to control manager thread
-std::mutex               g_mutexQue;           // mutex to guard access to player queue
+std::mutex               g_mutexque;           // mutex to guard access to player queue
 
 
 int main()
@@ -74,13 +68,18 @@ int main()
   unsigned int        len;
   struct sockaddr_in  servAddr, cliAddr;
   int                 nRet;
-
-  // TODO: process command line arguments...only use defalut if necessary
-
-  // launch our manager thread...
+  
   g_bForce = false;
   g_bMgrRun = true;
+  // TODO: process command line arguments...only use defalut if necessary
+
+  std::cout << "Welcome to the Clue-less server." << std::endl;
+  showUsage();
+  
+  // launch our manager thread...
   std::thread manager(manage);                       // manage is the name of the tread function
+
+  
 
   if (initWinSock())
   {
@@ -92,8 +91,7 @@ int main()
           servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
           servAddr.sin_port = htons(defPort);
 
-          std::cout << "Welcome to the Clue-less server." << std::endl;
-          showUsage();
+
 
           // build our heatbeat message, will reuse this often...
           msgT   hbMsg;
@@ -112,7 +110,7 @@ int main()
                   len = sizeof(cliAddr);
                   fd_set   rdfs;              // input descriptors to listen on
                   struct timeval tv;
-
+		  
                   while (bRun)
                   {
                       tv.tv_sec = 5;            // set timeout for 5 sec
@@ -183,6 +181,9 @@ int main()
                               {
                                   bRun = false;
                                   g_bMgrRun = false;
+				  std::cout << "waiting on manager thread to terminate..."<< std::endl;
+				  manager.join();
+				  
                               }
                               break;
 
@@ -199,10 +200,10 @@ int main()
                                   connInfo->cliAddr.sin_family = AF_INET;
                                   connInfo->cliAddr.sin_addr.s_addr = cliAddr.sin_addr.s_addr;
                                   connInfo->cliAddr.sin_port = cliAddr.sin_port;
-                                  
-                                  g_mutexQue.lock();
+
+				  g_mutexque.lock();
                                   g_conns.push_back(connInfo);
-                                  g_mutexQue.unlock();
+				  g_mutexque.unlock();
 
                                   // send a connected message here....
                                   send(connfd, (char*)&hbMsg, hbMsg.msgLen, 0);
@@ -232,6 +233,10 @@ int main()
                       }
                   }   // end of while block
 
+		  std::cout << "main thread exiting, joining manager thread..." << std::endl;
+
+		  std::cout << "closing any still open sockets..." << std::endl;
+
                   // close all sockets still in the queue.....
                   std::vector<pconnInfoT>::iterator   iter = g_conns.begin();
                   if (g_conns.size() > 0)
@@ -249,7 +254,7 @@ int main()
 #ifdef __WIN
                           closesocket((*iter)->connfd);
 #else
-						  close((*iter)->connfd);
+			  close((*iter)->connfd);
 #endif
                           (*iter)->connfd = -1;
                           ++iter;

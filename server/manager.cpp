@@ -1,7 +1,9 @@
 #include "manager.h"
+#include "game.h"
 
 #include <vector>
 #include <mutex>
+#include <thread>
 #include <iostream>
 
 #include <stdbool.h>
@@ -20,7 +22,7 @@
 
 
 extern std::vector<pconnInfoT>  g_conns;
-extern std::mutex               g_mutexQue;
+extern std::mutex               g_mutexque;
 extern bool                     g_bForce;
 extern bool                     g_bMgrRun;
 /*
@@ -31,69 +33,78 @@ This function provides the implementation of the manager.  This function does:
 */
 void manage()
 {
-    std::cout << "Manager thread alive and well" << std::endl;
-    while (g_bMgrRun)
-    {
-        int ret;
-        int fd = -1;
-        struct itimerspec timeout;
-        unsigned long long missed;
+  int ret;
+  int fd = -1;
+  struct itimerspec timeout;
+  unsigned long long missed;
+  
+   std::cout << "[manager] Manager thread alive and well" << std::endl;
 
-        fd = timerfd_create(CLOCK_MONOTONIC, 0);      // create a timer
-        if (fd > 0)
-        {
-            ret = fcntl(fd, F_SETFL, O_NONBLOCK);
-            if (!ret)
-            {
-                timeout.it_value.tv_sec = 5;            // 5 second time out
-                timeout.it_value.tv_nsec = 0;
-                timeout.it.interval.tv_sec = 5;         // recurring
-                timeout.it.interval.tv_nsec = 0;
+   fd = timerfd_create(CLOCK_MONOTONIC, 0);      // create a timer
 
-                ret = timerfd_settime(fd, 0, &timout, NULL);
-                if (!ret)
-                {
-                    while (g_bMgrRun)
-                    {
-                        while (read(fd, &missed, sizeof(missed)) < 0)
-                        {
-                            prinf("no timer expiry\n");
-                            sleep(1);
-                        }
-                    }
+   if (fd > 0)
+   {
+     ret = fcntl(fd, F_SETFL, O_NONBLOCK);
+     if (!ret)
+     {
+       timeout.it_value.tv_sec = 5;            // 5 second time out
+       timeout.it_value.tv_nsec = 0;
+       timeout.it_interval.tv_sec = 5;         // recurring
+       timeout.it_interval.tv_nsec = 0;
 
-                }
-                else
-                {
-                    fprintf(stderr, "falied to set timer duration, error is %d\n", errno);
-                }
+       ret = timerfd_settime(fd, 0, &timeout, NULL);
+       if (!ret)
+       {
+	 while (g_bMgrRun)
+         {
+	   std::vector<pconnInfoT> players;
+	   //bool bBuilding = false;
 
-            }
-            else
-            {
-                fprintf(stderr, "Failed to set to non-blocking mode, error: %d\n", errno);
-            }
+	   
+	   unsigned int nSize = g_conns.size();
 
-        }
-        else
-        {
-            fprintf(stderr, "Failed to create timer, error is: %d\n", errno);
-        }
+	   if(((nSize >= 3) && (nSize <= 6)) || g_bForce)
+	   {
+	     g_mutexque.lock();                                     // lock the queue
+	     for(int ndx = nSize-1; ndx >=0; ndx--)
+	     {
+	       std::cout << "[manager] Moving player: " << ndx << " to game" <<std::endl;
+	       players.push_back(g_conns.at(ndx));                  // move player from connections queue to players
+	       g_conns.erase(g_conns.begin() + ndx);                // remove the connection from the queue
+	     }
 
-        //tv.tv_sec = 5;            // set timeout for 5 sec
-        //tv.tv_usec = 0;
+	     g_conns.erase(g_conns.begin(), g_conns.end());
+	     g_bForce = false;
 
-        //FD_ZERO(&rdfs);
-        //FD_SET(0, &rdfs);
-        //FD_SET(sockfd, &rdfs);
+	     g_mutexque.unlock();
+	     std::cout << "[manager] Spawning a new game" << std::endl;
+	     std::thread  temp(game, players);
+	     temp.detach();                                    // detach from the game thread
+	   
+	     
+	   }
+	   
+	     sleep(5);
+	
+	 }  // end of while loop
+       }    // end of 'if(!ret)' block
+       else
+       {
+	 std::cerr << "[manager] falied to set timer duration, error is " << errno << std::endl;
+       }
+     }
+     else
+     {
+       std::cerr << "[manager] Failed to set to non-blocking mode, error  " << errno << std::endl;
+     }
+   }
+   else
+   {
+     std::cerr << "[manager] Failed to create timer, error is: " << errno <<std::endl;
+   }
 
-        //ret = select(sockfd + 1, &rdfs, nullptr, nullptr, &tv);
-    // TODO: set up a timer ....
-    // TODO: when we break (~1 sec) check condition variable bForce
-    // TODO: use a mutex to control access to queue
-    // TODO: when we break (~1 sec) check queue size
-	}
-
-
+   std::cout << "[manager] manager thread exiting" << std::endl;
 }
+
+
 
