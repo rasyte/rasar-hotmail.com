@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>Resources/gear.png</file>
-        <file>Resources/board.png</file>
+		<file>Resources/board.png</file>
         <file>Resources/card1.png</file>
         <file>Resources/card2.png</file>
         <file>Resources/card3.png</file>
