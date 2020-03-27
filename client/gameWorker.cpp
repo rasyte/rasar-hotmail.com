@@ -113,6 +113,16 @@ void gameWorker::process()
                                 {
                                     break;
                                 }
+                                case CMD_GAME_BEGIN:                            // game is starting soon....
+                                {
+                                    emit(gameBegin(QString(buf)));
+                                    break;
+                                }
+                                case CMD_GAME_SELECT:                           // character to select avatar...
+                                {
+                                    emit(selectAvatar(QByteArray::fromRawData(buf, NBR_SUSPECTS)));
+                                    break;
+                                }
                                 case CMD_SHUTDOWN:
                                 {
                                     emit serverShutdown(QString(buf));

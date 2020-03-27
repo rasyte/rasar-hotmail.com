@@ -13,6 +13,7 @@
 #include "gameWorker.h"
 #include "GameMenuDlg.h"
 #include "GuessDlg.h"
+#include "selectAvatarDlg.h"
 #include "../common/common.h"
 
 
@@ -245,6 +246,8 @@ void mainWnd::createWorker(char* sIP, short sPort)
     connect(pWorker, SIGNAL(error(QString)), this, SLOT(errorString(QString)));
     connect(pWorker, SIGNAL(serverShutdown(QString)), this, SLOT(shutdown(QString)));
     connect(pWorker, SIGNAL(hrtBeat(QString)), this, SLOT(heartBeat(QString)));
+    connect(pWorker, SIGNAL(gameBegin(QString)), this, SLOT(gameBegin(QString)));
+    connect(pWorker, SIGNAL(selectAvatar(QByteArray)), this, SLOT(selectAvatar(QByteArray)));
     connect(pWorker, SIGNAL(finished()), pWorker, SLOT(deleteLater()));
     connect(pWorker, SIGNAL(finished()), pThread, SLOT(quit()));
     connect(pThread, SIGNAL(started()), pWorker, SLOT(process()));
@@ -321,4 +324,24 @@ void mainWnd::heartBeat(QString msg)
 {
     QString strHtml = QString(msg);
     statusBar()->showMessage(msg);
+}
+
+void mainWnd::gameBegin(QString msg)
+{
+    QString strHtml = QString("%1").arg(msg);
+    m_txtState->insertHtml(strHtml);
+}
+
+void mainWnd::selectAvatar(QByteArray qba)
+{
+    selectAvatarDlg   dlg(this, qba);
+    if (QDialog::Accepted == dlg.exec())
+    {
+        QByteArray   newList = dlg.getAvatars();
+    }
+    // TODO : convert qba to char[]
+    // TODO : pass to avatar select dialog
+    // TODO : get avatar player wants to use
+    // TODO : send back to server
+
 }

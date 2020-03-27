@@ -21,6 +21,8 @@ private slots:
     void errorString(QString);
     void shutdown(QString);
     void heartBeat(QString);
+    void gameBegin(QString);
+    void selectAvatar(QByteArray);
 
 private:
     void setupUI();

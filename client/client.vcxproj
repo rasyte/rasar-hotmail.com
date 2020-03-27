@@ -89,6 +89,7 @@
     <ClCompile Include="loginDlg.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainWnd.cpp" />
+    <ClCompile Include="selectAvatarDlg.cpp" />
     <ClCompile Include="settingDlg.cpp" />
     <ClCompile Include="XGetopt.cpp" />
   </ItemGroup>
@@ -97,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="GameMenuDlg.ui" />
+    <QtUic Include="selectAvatar.ui" />
     <QtUic Include="settingDlg.ui" />
     <QtUic Include="loginDialog.ui" />
     <QtUic Include="mainWnd.ui" />
@@ -114,10 +116,11 @@
     <QtMoc Include="GuessDlg.h" />
     <ClInclude Include="logger.h" />
     <QtMoc Include="settingDlg.h" />
-    <ClInclude Include="x64\Debug\uic\ui_DialogButtonRight.h" />
+    <QtMoc Include="selectAvatarDlg.h" />
     <ClInclude Include="x64\Debug\uic\ui_GameMenuDlg.h" />
     <ClInclude Include="x64\Debug\uic\ui_loginDialog.h" />
     <ClInclude Include="x64\Debug\uic\ui_mainWnd.h" />
+    <ClInclude Include="x64\Debug\uic\ui_selectAvatar.h" />
     <ClInclude Include="x64\Debug\uic\ui_settingDlg.h" />
     <ClInclude Include="x64\Debug\uic\ui_suggestionDlg.h" />
     <ClInclude Include="XGetopt.h" />
