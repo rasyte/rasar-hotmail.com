@@ -12,7 +12,7 @@ void game(std::vector<pconnInfoT> vecPlayers)
 {
     bool bWinner = false;
     std::ostream_iterator<int> out_it(std::cout, ", ");
-    char  avatar[6] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };  // 0x00 - avatar is available, 0xFF avatar is not available
+    unsigned char  avatar[6] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };  // 0x00 - avatar is available, 0xFF avatar is not available
 
     std::cout << "[game] nbr of players: " << vecPlayers.size() << std::endl;
 
@@ -35,6 +35,7 @@ void game(std::vector<pconnInfoT> vecPlayers)
         std::cout << "[game] sending select message to player " << std::endl;
         std::cout << "[game] available avatars are: ";
         std::copy(avatar, avatar + NBR_SUSPECTS, out_it);
+        std::cout << std::endl;
         msg.msgLen = 3 + NBR_SUSPECTS;
         msg.chCode = CMD_GAME_SELECT;
         memcpy(msg.szMsg, avatar, NBR_SUSPECTS);
@@ -42,7 +43,7 @@ void game(std::vector<pconnInfoT> vecPlayers)
 
         recv(fdClient, (char*)&msg, msg.msgLen, 0);                 // get response from the client
         memcpy(avatar, msg.szMsg, NBR_SUSPECTS);                    // update the avatar array
-        std::cout << "[game] available avatars are: ";
+        std::cout << "[game] new list of avatars are: ";
         std::copy(avatar, avatar + NBR_SUSPECTS, out_it);
         std::cout << std::endl;
         ++iter;
