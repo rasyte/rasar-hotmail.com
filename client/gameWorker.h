@@ -25,7 +25,7 @@ signals:
     void hrtBeat(QString time);
     void serverShutdown(QString msg);
     void gameBegin(QString msg);
-    void selectAvatar(QByteArray avatar);
+    void selectAvatar(QString);
 
 private:
     bool     m_bRun;

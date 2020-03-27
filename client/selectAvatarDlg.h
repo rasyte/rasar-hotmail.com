@@ -5,15 +5,15 @@
 
 
 class QPushButton;
-class QRadioButton;
+class QCheckBox;
 
 class selectAvatarDlg : public QDialog
 {
     Q_OBJECT
 
 public:
-    selectAvatarDlg(QWidget* parent, QByteArray);
-    QByteArray  getAvatars(){ return m_qbaAvatars; }
+    selectAvatarDlg(QWidget* parent, QString);
+    QString  getAvatars(){ return m_qstrAvatars; }
 
 public slots:
     void onDone();
@@ -22,6 +22,6 @@ private:
     void setupUI();
 
     QPushButton*             m_btnSelect;
-    QVector<QRadioButton*>   m_vecPushButton;
-    QByteArray               m_qbaAvatars;
+    QVector<QCheckBox*>      m_vecPushButton;
+    QString                  m_qstrAvatars;
 };

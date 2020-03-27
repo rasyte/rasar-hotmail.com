@@ -14,8 +14,12 @@
 #endif
 
 #include <time.h>
-
+#include <QCoreApplication>
 #include <QSettings>
+
+#include <iostream>
+#include <iterator>
+#include <algorithm>
 
 //const int HDR_LEN = 3;                         // out message header length
 
@@ -85,7 +89,7 @@ void gameWorker::process()
                         {
                             char* buf = new char[msgLen - 3];
                             recv(m_soc, buf, msgLen - 3, 0);
-                        
+
                             switch (cmd)
                             {
                                 case  CMD_HRT_BEAT:                             // got a heart-beat from server
@@ -115,12 +119,12 @@ void gameWorker::process()
                                 }
                                 case CMD_GAME_BEGIN:                            // game is starting soon....
                                 {
-                                    emit(gameBegin(QString(buf)));
+                                    emit gameBegin(QString(buf));
                                     break;
                                 }
                                 case CMD_GAME_SELECT:                           // character to select avatar...
                                 {
-                                    emit(selectAvatar(QByteArray::fromRawData(buf, NBR_SUSPECTS)));
+                                    emit selectAvatar(QString(buf));
                                     break;
                                 }
                                 case CMD_SHUTDOWN:
@@ -149,7 +153,8 @@ void gameWorker::process()
             else
             {
                 CLogger::getInstance()->LogMessage(" Worker: timeout has occured");
-                // we should allow QT to process messages here....
+                QCoreApplication::processEvents();  // force QT to process messages here....
+                
             }
         }
     }
@@ -193,7 +198,7 @@ bool gameWorker::connectServer()
 
         struct sockaddr_in  serverAddr;
         serverAddr.sin_family = AF_INET;
-        serverAddr.sin_addr.s_addr = inet_addr(qstrServer.toStdString().c_str());
+        serverAddr.sin_addr.s_addr = inet_addr(qstrServer.toStdString().c_str());  // TODO: does this need to be in network byteorder?
         serverAddr.sin_port = htons(sPort);
 
         if (-1 != ::connect(m_soc, (const sockaddr*)&serverAddr, sizeof(serverAddr)))
@@ -219,23 +224,15 @@ bool gameWorker::connectServer()
 void gameWorker::sendMsg(QByteArray qbaMsg)
 {
     CLogger::getInstance()->LogMessage("got a request to send a message\n");
-    // convert back to char* to send out...
-    const char*   msg = qbaMsg.constData();
-    short len;
-    memcpy((void*)msg, (void*)&len, sizeof(short));
 
-    //int nRet = send(m_soc, msg, len, 0);
+    QString    qstrMsg(qbaMsg.constData());
+    msgT   msg;
+    msg.msgLen = 3 + qstrMsg.length();
+    msg.chCode = CMD_UNUSED;
+    strcpy(msg.szMsg, qstrMsg.toStdString().c_str());
+    int nRet = send(m_soc, (const char*)&msg, msg.msgLen, 0);
 
-    //if (nRet == -1)
-    //{
-    //    CLogger::getInstance()->LogMessage("failed to send message, error %d\n", networkError());
-    //}
-    //else if (nRet < len)
-    //{
-        // we've got a partial xmission here...
-    //}
-
-
+    CLogger::getInstance()->LogMessage("done sending message");
 }
 
 

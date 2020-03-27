@@ -247,7 +247,7 @@ void mainWnd::createWorker(char* sIP, short sPort)
     connect(pWorker, SIGNAL(serverShutdown(QString)), this, SLOT(shutdown(QString)));
     connect(pWorker, SIGNAL(hrtBeat(QString)), this, SLOT(heartBeat(QString)));
     connect(pWorker, SIGNAL(gameBegin(QString)), this, SLOT(gameBegin(QString)));
-    connect(pWorker, SIGNAL(selectAvatar(QByteArray)), this, SLOT(selectAvatar(QByteArray)));
+    connect(pWorker, SIGNAL(selectAvatar(QString)), this, SLOT(selectAvatar(QString)));
     connect(pWorker, SIGNAL(finished()), pWorker, SLOT(deleteLater()));
     connect(pWorker, SIGNAL(finished()), pThread, SLOT(quit()));
     connect(pThread, SIGNAL(started()), pWorker, SLOT(process()));
@@ -263,6 +263,8 @@ void mainWnd::keyPressEvent(QKeyEvent* pevt)
     if (pevt->key() == Qt::Key_Escape)
     {   
         GameMenuDlg   dlg(this);
+        dlg.setWindowFlags(Qt::Dialog | Qt::CustomizeWindowHint | Qt::WindowTitleHint);
+        dlg.setWindowTitle("Game Menu");
         dlg.exec();
     }
     else if (pevt->key() == Qt::Key_A)
@@ -280,7 +282,7 @@ void mainWnd::keyPressEvent(QKeyEvent* pevt)
             memcpy((void*)buf, (void*)&msg, msg.msgLen);
             QByteArray  qbaMsg = QByteArray::fromRawData(buf, msg.msgLen);
 
-            emit(qbaMsg);                                // TODO : send the message to server.....
+            emit sendMsg(qbaMsg);                                // TODO : send the message to server.....
         }
 
     }
@@ -300,7 +302,7 @@ void mainWnd::keyPressEvent(QKeyEvent* pevt)
             memcpy((void*)buf, (void*)&msg, msg.msgLen);
             QByteArray  qbaMsg = QByteArray::fromRawData(buf, msg.msgLen);
 
-            emit(qbaMsg);                                // TODO : send the message to server.....
+            emit sendMsg(qbaMsg);                                // TODO : send the message to server.....
         }
     }
 }
@@ -332,13 +334,30 @@ void mainWnd::gameBegin(QString msg)
     m_txtState->insertHtml(strHtml);
 }
 
-void mainWnd::selectAvatar(QByteArray qba)
+void mainWnd::selectAvatar(QString  avatars)
 {
-    selectAvatarDlg   dlg(this, qba);
+    CLogger::getInstance()->LogMessage("[mainWnd]: received from comms thread");
+    for (int ndx = 0; ndx < NBR_SUSPECTS; ndx++)
+    {
+        CLogger::getInstance()->LogMessage("%c", avatars.at(ndx));
+    }
+
+
+    selectAvatarDlg   dlg(this, avatars);
+
     if (QDialog::Accepted == dlg.exec())
     {
-        QByteArray   newList = dlg.getAvatars();
+        QString   newList = dlg.getAvatars();
+        CLogger::getInstance()->LogMessage("[mainWnd]: sending to server:");
+        for (int ndx = 0; ndx < NBR_SUSPECTS; ndx++)
+        {
+            CLogger::getInstance()->LogMessage("%c", newList.at(ndx));
+        }
+        CLogger::getInstance()->LogMessage("sending message to comms thread");
+        emit sendMsg(QByteArray(newList.toStdString().c_str(), newList.size()));
+
     }
+
     // TODO : convert qba to char[]
     // TODO : pass to avatar select dialog
     // TODO : get avatar player wants to use

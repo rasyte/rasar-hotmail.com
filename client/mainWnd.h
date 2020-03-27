@@ -22,7 +22,7 @@ private slots:
     void shutdown(QString);
     void heartBeat(QString);
     void gameBegin(QString);
-    void selectAvatar(QByteArray);
+    void selectAvatar(QString);
 
 private:
     void setupUI();

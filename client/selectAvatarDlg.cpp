@@ -1,13 +1,18 @@
 #include "../common/common.h"
 #include "selectAvatarDlg.h"
 
-#include <QRadioButton>
+#include <QCheckBox>
 #include <QPushButton>
 #include <QByteArray>
 #include <QMessageBox>
 
-selectAvatarDlg::selectAvatarDlg(QWidget* parent, QByteArray qba) : QDialog(parent), m_qbaAvatars(qba)
+#include <iostream>
+#include <iterator>
+#include <algorithm>
+
+selectAvatarDlg::selectAvatarDlg(QWidget* parent, QString qba) : QDialog(parent), m_qstrAvatars(qba)
 {
+    std::cout << std::endl;
     setupUI();
 }
 
@@ -25,12 +30,12 @@ void selectAvatarDlg::setupUI()
 
     for (int ndx = 0; ndx < NBR_SUSPECTS; ndx++)
     {
-        QRadioButton* pTemp = new QRadioButton(this);
+        QCheckBox* pTemp = new QCheckBox(this);
         pTemp->setObjectName(QString("btnAvatar%1").arg(ndx));
-        pTemp->setGeometry(QRect(10, 10 + 20*ndx, 82, 17));
+        pTemp->setGeometry(QRect(10, 10 + 20*ndx, 130, 17));
         pTemp->setText(lpszSuspects[ndx]);
         pTemp->setFont(font);
-        if (0xFF == m_qbaAvatars.at(ndx))
+        if ('u' == m_qstrAvatars.at(ndx))
         {
             pTemp->setEnabled(false);           // avatar has already been selected
             pTemp->setChecked(true);            // show it as selected
@@ -45,31 +50,31 @@ void selectAvatarDlg::setupUI()
     m_btnSelect->setText("Select");
     m_btnSelect->setFont(font);
 
-    connect(this, SIGNAL(selected()), this, SLOT(onDone()));
+    connect(m_btnSelect, SIGNAL(clicked()), this, SLOT(onDone()));
 }
 
 
 void selectAvatarDlg::onDone()
 {
-    QByteArray   trial;
+    QString  trial;
 
     // get current state of the Dialog...
     for (int ndx = 0; ndx < NBR_SUSPECTS; ndx++)
     {
         if (m_vecPushButton.at(ndx)->isChecked())
-            trial.append(0xFF);
+            trial.append('u');
         else
-            trial.append((char)0x00);
+            trial.append('a');
     }
 
     // compare the trial to the original, if the same user had not selected..
-    if (m_qbaAvatars.compare(trial) == 0)   
+    if (trial == m_qstrAvatars)   
     {
         QMessageBox::critical(this, "error", "you must select an avatar");
     }
     else                                        // accept the current selection
     {
-        m_qbaAvatars = trial;
+        m_qstrAvatars = trial;
         QDialog::accept();
     }
 }
