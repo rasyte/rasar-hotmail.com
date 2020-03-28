@@ -69,6 +69,7 @@ void manage()
 	                for(int ndx = nSize-1; ndx >=0; ndx--)
 	                {
 	                    std::cout << "[manager] Moving player: " << ndx << " to game" <<std::endl;
+                        (g_conns.at(ndx))->player = ndx;                     // fill in player number;
 	                    players.push_back(g_conns.at(ndx));                  // move player from connections queue to players
 	                    g_conns.erase(g_conns.begin() + ndx);                // remove the connection from the queue
 	                }  
